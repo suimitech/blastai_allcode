@@ -8,6 +8,7 @@ import { showMintModal } from "./components/MintModal.js";
 import { init } from "./mint";
 import { dirtyFixConnectWalletUI } from "./utils";
 
+//  React 应用初始化和渲染过程的管理逻辑
 const createDOMElement = () => {
     const body = document.getElementsByTagName('body')[0];
     const div = Object.assign(document.createElement('div'), {

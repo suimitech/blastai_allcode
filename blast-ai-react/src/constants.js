@@ -1,3 +1,5 @@
+// 定义支持切换的网络
+
 export const NETWORKS = {
     1: {
         name: "Ethereum",

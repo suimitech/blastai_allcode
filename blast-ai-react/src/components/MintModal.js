@@ -3,7 +3,7 @@ import { Box, CircularProgress, Dialog, DialogContent, DialogTitle, IconButton, 
 import CloseIcon from '@mui/icons-material/Close';
 import { QuantityModalStep } from './QuantityModalStep';
 import { isMobile } from "../utils";
-
+// 用于显示一个带有关闭按钮的对话框标题
 const DialogTitleWithClose = ({ children, onClose }) => {
     return <DialogTitle>
         <Box sx={{ textAlign: "center" }}>
@@ -25,7 +25,7 @@ const DialogTitleWithClose = ({ children, onClose }) => {
             </IconButton>) : null}
     </DialogTitle>
 }
-
+// 用于显示一个模态框，用来处理支付和交易确认的逻辑
 export const MintModal = (props, ref) => {
     const [isOpen, setIsOpen] = useState(false)
     const [txHash, setTxHash] = useState(undefined)
@@ -41,18 +41,6 @@ export const MintModal = (props, ref) => {
         setIsOpen, setQuantity
     })
     )
-
-    // useEffect(() => {
-    //     if (isOpen) {
-    //         const timer = setTimeout(() => {
-    //             setShouldDisplay(true);
-    //         }, 1000); // 设置1秒的延迟
-
-    //         return () => clearTimeout(timer); // 清理定时器
-    //     }
-    // }, [isOpen]); // 依赖isOpen状态，当它改变时触发
-
-
 
     return (
         <Dialog
@@ -115,6 +103,8 @@ export const MintModal = (props, ref) => {
 
 export const modalRef = React.createRef();
 
+
+// 用于在页面中显示铸造模态框。根据传入的 quantity 参数，更新模态框内部的状态，然后设置 isOpen 为true，显示模态框。
 export const showMintModal = (quantity) => {
     if (quantity) {
         modalRef.current?.setQuantity(quantity)

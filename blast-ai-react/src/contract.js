@@ -6,6 +6,7 @@ export let NFTContract;
 
 const abiMemoryCache = {};
 
+// 初始化以太坊智能合约web3对象
 export const initContract = async (_web3, contract, shouldSwitchNetwork = true) => {
     let currentNetwork = await getCurrentNetwork();
     if (shouldSwitchNetwork && !contract.allowedNetworks.includes(currentNetwork)) {
@@ -17,6 +18,8 @@ export const initContract = async (_web3, contract, shouldSwitchNetwork = true) 
     return new _web3.eth.Contract(abi, address);
 }
 
+
+// 初始化全局的合约对象，包括设置合约地址和 ABI
 const initContractGlobalObject = async () => {
     if (!window.CONTRACT_ADDRESS?.length || window.CONTRACT_ADDRESS === "YOUR CONTRACT ADDRESS HERE") {
         alert("You forgot to insert your NFT contract address in your embed code. Insert your contract address, publish the website and try again. If you don't have it, create it at https://app.buildship.xyz")
@@ -35,6 +38,7 @@ const initContractGlobalObject = async () => {
     }
 }
 
+// 用于获取指定合约地址的 ABI,如果 ABI 已经在内存缓存中存在，则直接返回缓存的 ABI,如果ABI不在内存缓存中，则调用 fetchRemoteCachedABI() 函数尝试从远程缓存获取 ABI
 export const fetchABI = async (address, chainID) => {
     if (abiMemoryCache[address])
         return abiMemoryCache[address]
@@ -70,7 +74,7 @@ export const fetchABI = async (address, chainID) => {
     abiMemoryCache[address] = abi;
     return abi;
 }
-
+// 从远程缓存获取 ABI
 const fetchRemoteCachedABI = async (address) => {
     if (!window.DEFAULTS?.abiCacheURL) {
         return null
@@ -91,6 +95,7 @@ const fetchRemoteCachedABI = async (address) => {
     }
 }
 
+// 从嵌入代码中获取ABI
 const getEmbeddedMainABI = (address) => {
     if (address?.toLowerCase() === window.CONTRACT_ADDRESS?.toLowerCase()) {
         console.log("Trying to load embedded main contract ABI")
@@ -100,7 +105,7 @@ const getEmbeddedMainABI = (address) => {
     }
     return undefined
 }
-
+// 确保在应用启动时能够正确初始化和设置以太坊智能合约对象 NFTContract
 export const setContracts = async (shouldSwitchNetwork = true) => {
     await initContractGlobalObject();
     const _web3 = isWeb3Initialized() ? web3 : readOnlyWeb3

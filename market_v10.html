@@ -801,7 +801,7 @@
                         console.error('Error fetching initial data:', error);
                     }
                 },
-                //vue初始化时，获取市值前100的token对应的表格信息
+                // vue初始化时，获取市值前100的token对应的表格信息
                 processCoinData(coin, index) {
                     const coinInfo = coin.CoinInfo || {};
                     const displayInfo = coin.DISPLAY ? coin.DISPLAY.USD : {};

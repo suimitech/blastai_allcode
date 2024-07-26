@@ -4,10 +4,13 @@ import { NFTContract } from "../contract.js"
 import { buildTx } from "../tx";
 import { readOnlyWeb3 } from "../web3";
 
+// 用于在 NFTContract.methods 对象中查找与给定方法名称匹配的方法名。
 const findMethodByName = (methodName) =>
     Object.keys(NFTContract.methods)
         .find(key => key.toLowerCase() === methodName.toLowerCase())
 
+
+// 用于获取可能的自定义方法名，如果存在的话，返回相应的方法
 const getMethodWithCustomName = (methodName) => {
     const method = window.DEFAULTS?.contractMethods ? window.DEFAULTS?.contractMethods[methodName] : undefined
     if (method) {
@@ -22,6 +25,8 @@ const getMethodWithCustomName = (methodName) => {
     return undefined
 }
 
+
+// 用于获取执行mint操作的方法，并根据提供的参数执行该方法
 const getMintTx = ({ numberOfTokens }) => {
     const customMintMethod = getMethodWithCustomName('mint')
     if (customMintMethod)
@@ -37,6 +42,7 @@ const getMintTx = ({ numberOfTokens }) => {
     return NFTContract.methods[findMethodByName(name)](numberOfTokens);
 }
 
+// 用于获取执行alphahunter操作的方法
 const getAlphaHunterTx = () => {
     console.log(0.00025)
 
@@ -60,21 +66,7 @@ const getAlphaHunterTx = () => {
 }
 
 
-const getMintPriceConstant = () => {
-    // for contracts without exported price variable or method
-    const defaultPrice = window.DEFAULTS?.publicMint?.price
-    if (defaultPrice) {
-        const priceNumber = typeof defaultPrice === "string" ? Number(defaultPrice) : defaultPrice
-        if (isNaN(priceNumber)) {
-            alert("Wrong publicMintPrice format, should be a number in ETH (or native token)")
-            return undefined
-        }
-        console.warn("Using DEFAULTS.publicMint.price as price not found in the smart-contract")
-        return (priceNumber * 1e18).toString()
-    }
-    return undefined
-}
-
+// 用于设置模态框中的mint值
 export const getMintPrice = async () => {
     // const customMintPriceMethod = getMethodWithCustomName('price')
     // if (customMintPriceMethod) {
@@ -109,6 +101,7 @@ export const getMintPrice = async () => {
     return 0.00025
 }
 
+// 从智能合约中获取已经mint的数量
 export const getMintedNumber = async () => {
     if (!NFTContract)
         return undefined
@@ -128,6 +121,7 @@ export const getMintedNumber = async () => {
     return readOnlyWeb3.utils.hexToNumber(minted)
 }
 
+// 用于从智能合约中获取最大供应量信息
 export const getMaxSupply = async () => {
     if (!NFTContract)
         return undefined
@@ -144,6 +138,7 @@ export const getMaxSupply = async () => {
     return undefined
 }
 
+// 用于获取默认设定每次mint的最大值
 export const getDefaultMaxTokensPerMint = () => {
     const defaultMaxPerMintConfig = window.DEFAULTS?.publicMint?.maxPerMint || window.MAX_PER_MINT
     if (!defaultMaxPerMintConfig || isNaN(Number(defaultMaxPerMintConfig))) {
@@ -153,6 +148,8 @@ export const getDefaultMaxTokensPerMint = () => {
     return Number(defaultMaxPerMintConfig)
 }
 
+
+// 用于从智能合约中获取每次mint的最大值
 export const getMaxTokensPerMint = async () => {
     const customMaxPerMintMethod = getMethodWithCustomName('maxPerMint')
     if (customMaxPerMintMethod)
@@ -207,7 +204,7 @@ export const getMaxTokensPerMint = async () => {
 //     return Promise.resolve({ tx })
 // }
 
-
+// 执行alphahunter的mint操作,并返回一个包含交易对象tx的Promise对象
 export const alphaHuntermint = async () => {
     const wallet = await getWalletAddressOrConnect(true);
     if (!wallet) {

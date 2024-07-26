@@ -15,6 +15,7 @@ export const isWeb3Initialized = () => {
     return web3 && provider;
 }
 
+// 用于管理和提供不同的 Web3 钱包集成选项，包括 WalletConnect、Coinbase Wallet 和 MetaMask
 const getWeb3ModalProviderOptions = ({
     forceConnect,
     isMobileOnlyInjectedProvider,
@@ -149,7 +150,7 @@ const initWeb3Modal = (forceConnect, isMobileOnlyInjectedProvider) => {
 
     return web3Modal
 }
-
+// 初始化 Web3 连接
 const initWeb3 = async (forceConnect = false) => {
     if (isWeb3Initialized()) return
 
@@ -188,6 +189,8 @@ const initWeb3 = async (forceConnect = false) => {
     web3 = provider ? new Web3(provider) : undefined;
 }
 
+
+// 判断钱包是否连接
 export const isWalletConnected = async () => {
     console.log("11" + "isWalletConnected")
     if (!isWeb3Initialized()) {
@@ -197,7 +200,7 @@ export const isWalletConnected = async () => {
     console.log("22" + "isWalletConnected" + accounts)
     return accounts?.length > 0;
 }
-
+// 获取现在连接的钱包地址并判断是否需要切换网络
 export const getWalletAddressOrConnect = async (shouldSwitchNetwork, refresh) => {
     const currentAddress = async () => {
         console.log("11" + "wallet")
@@ -236,10 +239,13 @@ export const getWalletAddressOrConnect = async (shouldSwitchNetwork, refresh) =>
     return await currentAddress();
 }
 
+// 获取现在连接网络
 export const getCurrentNetwork = async () => {
     return Number(await provider?.request({ method: 'net_version' }));
 }
 
+
+// 切换网络
 export const switchNetwork = async (chainID) => {
     if (!provider) {
         return
@@ -279,7 +285,7 @@ export const switchNetwork = async (chainID) => {
         console.error(error);
     }
 }
-
+// 初始化 Web3 过程中捕获并处理可能出现的非用户取消类的异常，确保用户可以看到有用的错误信息，同时避免因用户操作取消而弹出不必要的错误提示
 const tryInitWeb3 = async (forceConnect) => {
     try {
         await initWeb3(forceConnect);
@@ -299,19 +305,21 @@ const tryInitWeb3 = async (forceConnect) => {
     }
 }
 
+// 连接钱包函数
 export const connectWallet = async () => {
     console.log("Connecting Wallet")
     await tryInitWeb3(true)
     await updateWalletStatus()
     console.log("Connected Wallet")
 }
-
+// 获取id为connect的按钮
 const getConnectButton = () => {
     const btnID = window.buttonID ?? '#connect';
     return document.querySelector(btnID)
         ?? document.querySelector(`a[href='${btnID}']`);
 }
 
+// 更新"connect"按钮的文本状态
 export const updateWalletStatus = async () => {
     const connected = await isWalletConnected();
     const button = getConnectButton();
@@ -320,6 +328,7 @@ export const updateWalletStatus = async () => {
     }
 }
 
+// 用户点击一下就会更新按钮的显示状态
 export const updateConnectButton = () => {
     const walletBtn = getConnectButton();
     walletBtn?.addEventListener('click', async () => {

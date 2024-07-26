@@ -40,6 +40,8 @@ export const updateMintButton = () => {
     }
 }
 
+
+// 查找铸造计数器元素，更新计数器内容
 export const updateMintedCounter = async () => {
     const mintedElem = document.querySelector("#minted-counter")
     const totalElem = document.querySelector("#total-counter")
@@ -60,11 +62,14 @@ export const updateMintedCounter = async () => {
     }
 }
 
+
+// 获取页面上id为quantity-select的选择器的值，转换为数字后返回，如果不存在或者为空，则返回undefined
 const getMintQuantity = () => {
     const quantity = document.querySelector('#quantity-select')?.value
     return quantity !== '' && quantity !== undefined ? Number(quantity) : undefined;
 }
 
+// 根据按钮是否有子元素，设置按钮的文本内容；用于在加载状态下显示“Loading”，操作完成后回复原始文本内容
 const setButtonText = (btn, text) => {
     if (btn.childElementCount > 0) {
         btn.children[0].textContent = text;

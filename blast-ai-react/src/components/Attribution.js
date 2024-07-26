@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { NFTContract } from '../contract';
 import { useEmbed } from "../hooks/useEmbed";
 
+// 定义名为Attribution的React函数组件
+// 用于显示页面上的归属信息，并根据条件显示不同的文本内容
 export const Attribution = (props) => {
     const [attributionText, setAttributionText] = useState("Confirm to pay 0.00025 ETH for alphahunter")
     const [isBuildshipUser, setIsBuildshipUser] = useState(false)

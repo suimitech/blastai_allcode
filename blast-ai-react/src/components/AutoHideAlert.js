@@ -1,15 +1,15 @@
-import React, {useImperativeHandle, useState} from "react";
-import {Alert, Snackbar} from "@mui/material";
+import React, { useImperativeHandle, useState } from "react";
+import { Alert, Snackbar } from "@mui/material";
 
-
+// 定义React组件AutoHideAlert，用于显示自动隐藏的警报或消息
 const AutoHideAlert = (props, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [text, setText] = useState("");
     const [type, setType] = useState("success");
 
     useImperativeHandle(ref, () => ({
-            setIsOpen, setText, setType
-        })
+        setIsOpen, setText, setType
+    })
     )
     return (
         <Snackbar
