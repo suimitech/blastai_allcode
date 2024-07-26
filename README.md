@@ -67,6 +67,13 @@ blastai的kol-flow页面的嵌入代码
 位置：blastai项目中alphahunter、top-10-tokens、merkets、kol-flow页中，页面最下方
 作用：实时显示20个token的价格变动
 
+(9)blast-ai-react文件夹
+链接小狐狸钱包的react项目代码
+位置：alphahunter中的Home页中的嵌入代码
+使用：部署到vercel之后，在webflow的home页中嵌入
+      <script src="https://blast-ai-react.vercel.app/static/js/main.js"></script>
+      <link href="https://blast-ai-react.vercel.app/css/main.css" rel="stylesheet">
+
 --------------------------------------------------------------------------------
 本项目所有代码的源代码已经上传到https://github.com/suimitech/blastai_allcode中了，项目服务器端代码部署到zeabur.com中了，zeabur.com是通过github账号登录的：
 github账号：dayuya_zy@163.com
