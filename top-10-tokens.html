@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webflow Pagination Example</title>
+
+    <style>
+        .gradient-border-active {
+            border-left: 5px solid skyblue;
+        }
+
+        .button-style {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-direction: row !important;
+            writing-mode: horizontal-tb !important;
+            transform: none;
+        }
+
+        .nav-text-block {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-direction: row !important;
+            writing-mode: horizontal-tb !important;
+            transform: none;
+        }
+
+        .nav-link-4.orange-bottom-border.data-btn.active {
+            color: skyblue !important;
+        }
+
+        .nav-link-4.orange-bottom-border.data-btn {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center !important;
+        }
+
+        #div-block-420 .nav-link-4 {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center !important;
+            padding: 10px 20px !important;
+            color: skyblue !important;
+        }
+
+        .pagination {
+            display: none;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+            padding: 10px 20px;
+            border: 1px solid rgba(165, 165, 177, 0.5);
+            background-color: transparent;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .pagination button.active {
+            background-color: #7c3dfd;
+            color: white;
+        }
+
+        .ellipsis {
+            margin: 0 5px;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="pagination">
+        <button id="prevPage">&laquo; Prev</button>
+        <span id="pagination-buttons"></span>
+        <button id="nextPage">Next &raquo;</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const timestamp1 = urlParams.get('timestamp1');
+            const timestamp2 = urlParams.get('timestamp2');
+
+
+
+            //如果url中存在时间戳 就会执行fetchDataByTimestamps()函数
+            //如果url中不存在时间戳 就会执行updateCryptoInfo()函数，获取最新json文件中的top 10 tokens
+            if (timestamp1 && timestamp2) {
+                fetchDataByTimestamps(timestamp1, timestamp2);
+            } else {
+                console.log('最新数据');
+                updateCryptoInfo();
+            }
+
+
+            //根据时间戳查询json文件，并将json文件中的10个tokens和时间戳ts显示在网页中，然后根据token名字获取token对应的logo、price、volume、market_cap、fully_diluted_market_cap显示在表格中
+            async function fetchDataByTimestamps(timestamp1, timestamp2) {
+                try {
+                    const response = await fetch(`https://17588300.cpolar.io/get_period_narratives_from_db?timestamp1=${timestamp1}&timestamp2=${timestamp2}`);
+                    console.log(`https://17588300.cpolar.io/get_period_narratives_from_db?timestamp1=${timestamp1}&timestamp2=${timestamp2}`)
+                    const jsonData = await response.json();
+                    console.log(jsonData)
+                    var timestamp3 = jsonData[0][5].ts;
+                    console.log("00000000000000")
+                    console.log("ts:" + timestamp3)
+                    displayTimestamp(timestamp3);
+                    // Fetch logo and info for the tokens
+                    // const uniqueTokens = jsonData[0][jsonData[0].length - 1].tokens;
+                    const uniqueTokens = jsonData[0][6].tokens;
+                    console.log("tokens" + uniqueTokens);
+
+
+                    const nameElements = document.querySelectorAll('.name');
+                    const logoPromises = uniqueTokens.map(symbol => fetchLogo(symbol));
+                    const infoPromises = uniqueTokens.map(symbol => fetchInfo(symbol));
+
+                    nameElements.forEach((el, index) => {
+                        if (uniqueTokens[index]) {
+                            el.textContent = uniqueTokens[index];
+                        }
+                    });
+
+                    const logoResponses = await Promise.all(logoPromises);
+                    const infoResponses = await Promise.all(infoPromises);
+
+                    logoResponses.forEach(async (response, index) => {
+                        if (response.ok) {
+                            const logoData = await response.json();
+                            const logoUrl = logoData.logo || "No logo found";
+                            const image15Elements = document.querySelectorAll('.logo');
+                            if (image15Elements[index]) {
+                                image15Elements[index].src = logoUrl;
+                                image15Elements[index].alt = `${uniqueTokens[index]} Logo`;
+                            }
+                        }
+                    });
+
+                    infoResponses.forEach(async (response, index) => {
+                        if (response.ok) {
+                            const infoData = await response.json();
+                            const { price, volume_24h, market_cap, fully_diluted_market_cap } = infoData;
+                            const formattedPrice = formatPrice(price);
+                            document.querySelectorAll('.price')[index].textContent = formattedPrice;
+                            document.querySelectorAll('.volume')[index].textContent = `$${numberWithCommas(Math.floor(volume_24h))}`;
+                            document.querySelectorAll('.mcmc')[index].textContent = `$${numberWithCommas(Math.floor(market_cap))}`;
+                            document.querySelectorAll('.fdvfdv')[index].textContent = `$${numberWithCommas(Math.floor(fully_diluted_market_cap))}`;
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
+            }
+
+
+
+            //获取最新的json文件，并将json文件中的10个tokens和时间戳ts显示在网页中，然后根据token名字获取token对应的logo、price、volume、market_cap、fully_diluted_market_cap显示在表格中
+            async function updateCryptoInfo() {
+                try {
+                    const tokenResponse = fetch('https://17588300.cpolar.io/get_narratives_from_db');
+                    const logoPromises = [];
+                    const infoPromises = [];
+
+                    // Fetching logos and info in parallel
+                    const token = await tokenResponse;
+                    const jsonData1 = await token.json();
+                    const jsonData = jsonData1[0][11].tokens;
+                    const timestamp = jsonData1[0][10].ts; // 第二个元素是包含时间戳的对象
+                    console.log(jsonData)
+                    console.log(timestamp)
+                    displayTimestamp(timestamp);
+                    const nameElements = document.querySelectorAll('.name');
+
+                    for (let index = 0; index < nameElements.length; index++) {
+                        const symbol = jsonData[index];
+                        if (symbol) {
+                            // 添加将获取到的符号设置为nameElements元素的文本内容的代码
+                            nameElements[index].textContent = symbol;
+
+                            logoPromises.push(fetchLogo(symbol));
+                            infoPromises.push(fetchInfo(symbol));
+                        }
+                    }
+
+                    const logoResponses = await Promise.all(logoPromises);
+                    const infoResponses = await Promise.all(infoPromises);
+
+                    // Update DOM with logo and info
+                    logoResponses.forEach((logoResponse, index) => {
+                        if (logoResponse.ok) {
+                            logoResponse.json().then(logoData => {
+                                const logoUrl = logoData.logo || "No logo found";
+                                const image15Elements = document.querySelectorAll('.logo');
+                                if (image15Elements[index]) {
+                                    image15Elements[index].src = logoUrl;
+                                    image15Elements[index].alt = `${jsonData[index]} Logo`;
+                                }
+                            });
+                        }
+                    });
+
+                    infoResponses.forEach((infoResponse, index) => {
+                        if (infoResponse.ok) {
+                            infoResponse.json().then(infoData => {
+                                const { price, volume_24h, market_cap, fully_diluted_market_cap } = infoData;
+                                const priceElement = document.querySelectorAll('.price')[index];
+                                const volumeElement = document.querySelectorAll('.volume')[index];
+                                const mcElement = document.querySelectorAll('.mcmc')[index];
+                                const fdvElement = document.querySelectorAll('.fdvfdv')[index];
+
+                                let formattedPrice;
+                                if (price >= 1) {
+                                    formattedPrice = `$${numberWithCommas(price.toFixed(2))}`;
+                                } else {
+                                    formattedPrice = `$${price.toFixed(Math.max(1 - Math.floor(Math.log10(price))))}`;
+                                }
+                                priceElement.textContent = formattedPrice;
+                                volumeElement.textContent = `$${numberWithCommas(Math.floor(volume_24h))}`;
+                                mcElement.textContent = `$${numberWithCommas(Math.floor(market_cap))}`;
+                                fdvElement.textContent = `$${numberWithCommas(Math.floor(fully_diluted_market_cap))}`;
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
+            }
+            //将json文件中存储的ts时间显示在id为ts的标签元素中
+            function displayTimestamp(timestampStr) {
+                var tsElement = document.getElementById('ts');
+                tsElement.textContent = timestampStr;
+            }
+            //获取token对应的logo图片的url
+            function fetchLogo(symbol) {
+                return fetch(`https://blastai-getlogo2.zeabur.app/get_id/${symbol}`);
+            }
+
+            //获取token对应的相关信息，包括：price、volume_24h、market_cap、fully_diluted_market_cap
+            function fetchInfo(symbol) {
+                return fetch(`https://blast-getinfo.zeabur.app/getinfo/${symbol}`);
+            }
+            //每隔三位数添加一个","
+            function numberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            //保留小数点后面除了0之外的两位有效数字
+            function formatPrice(price) {
+                if (price >= 1) {
+                    return `$${numberWithCommas(price.toFixed(2))}`;
+                } else {
+                    return `$${price.toFixed(Math.max(1 - Math.floor(Math.log10(price))))}`;
+                }
+            }
+
+
+
+        });
+    </script>
+</body>
+
+</html>

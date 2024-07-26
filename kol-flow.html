@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Table with Element UI</title>
+    <!-- 引入Element UI的CSS文件 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="//unpkg.com/vue@2/dist/vue.js"></script>
+    <script src="//unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+    <style>
+        .tweet_title {
+            cursor: pointer;
+        }
+
+        .tweet_user {
+            margin-top: 5px;
+            margin-left: 5px;
+            margin-bottom: 0px;
+            padding: 0px;
+            cursor: help;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .tweet_user img {
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+
+        .el-card__body,
+        .el-main {
+            padding-right: 0px;
+        }
+
+        .tweet_title {
+            margin-top: 5px;
+            margin-left: 10px;
+            margin-bottom: 0px;
+            cursor: pointer;
+            color: #409EFF;
+        }
+
+        .el-card__body {
+            padding-top: 0px;
+            padding-left: 0px;
+            padding-bottom: 20px;
+        }
+
+        .views {
+            position: absolute;
+            top: 35px;
+            right: 10px;
+            background-color: #409EFF;
+            color: #fff;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .tweet_user {
+            width: 400px;
+        }
+
+        .tweet_user:hover .tweet_user_info {
+            display: block;
+        }
+
+        .tweet_user_info {
+            display: none;
+            position: absolute;
+            top: 10%;
+            left: 200px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+
+            padding: 5px;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .Followers_Friends {
+            margin: 0px;
+        }
+
+        .followers {
+            color: red;
+            /* 设置 Followers 的颜色 */
+        }
+
+        .friends {
+            color: blue;
+            /* 设置 Friends 的颜色 */
+        }
+
+        .separator {
+            margin: 0 10px;
+            /* 设置间隔 */
+        }
+
+        .description {
+            color: #409EFF;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="app">
+        <div class="block" v-infinite-scroll="loadMore" :infinite-scroll-disabled="disabled"
+            :infinite-scroll-distance="10" style="margin-bottom: 20px; overflow-y:auto">
+            <el-timeline>
+                <el-timeline-item v-for="tweet in tweets" :key="tweet.create_time + '-' + index"
+                    :timestamp="tweet.create_time" placement="top">
+                    <el-card class="tweetscard">
+                        <div class="views">{{ tweet.views }} views</div>
+                        <div class="tweet_user">
+                            <p>from</p>
+                            <img :src="tweet.profile_image_url_https" alt="Avatar" width="50" height="50">
+                            <p>{{ tweet.tweet_user }} :</p>
+                            <div class="tweet_user_info">
+                                <p class="description">{{ tweet.description }}</p>
+                                <span class="followers">Followers: {{ tweet.followers_count }}</span>
+                                <span class="separator"> </span>
+                                <span class="friends">Friends: {{ tweet.friends_count }}</span>
+                            </div>
+                        </div>
+                        <h4 @click="openUrl(tweet.tweet_url)" class="tweet_title">{{ tweet.tweet_title }}</h4>
+                    </el-card>
+                </el-timeline-item>
+            </el-timeline>
+            <p v-if="loading">loading...</p>
+            <p v-if="noMore">no more</p>
+        </div>
+    </div>
+
+    <script>
+        const tweetsArray = [
+            {
+                "create_time": "2024-07-15 01:52:04",
+                "tweet_title": "#BTC spring #BTC 200MA25%522%54000 ",
+                "tweet_user": "Rocky",
+                "tweet_url": "https://twitter.com/Rocky_Bitcoin/status/1812666409283096910",
+                "description": "#币安广场创作者:Rocky_Bitcoin- Long term investor #BTC #ETH #OP #GRT #FIL #LINK| Crypto since 2017 | Not financial advice, DYOR | TG:https://t.co/jqUkBneJ3r",
+                "followers_count": 73154,
+                "friends_count": 1768,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1549242558098046976/bU2ZeoEU_normal.jpg",
+                "views": "8972"
+            },
+            {
+                "create_time": "2024-07-14 12:15:39",
+                "tweet_title": "RT @0xtuba: Alameda's balance sheet had ~$7.5m of TRUMPLOSE in 2022, against @GiganticRebirth if they were still solvent, guessing that t…",
+                "tweet_user": "Awawat",
+                "tweet_url": "https://twitter.com/Awawat_Trades/status/1812460951599227216",
+                "description": "I don’t trade the chop.",
+                "followers_count": 103191,
+                "friends_count": 7553,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1705441078193926144/gLmTqHQN_normal.jpg",
+                "views": null
+            },
+            {
+                "create_time": "2024-07-14 09:03:30",
+                "tweet_title": "We have the best macro set up you could hope for. We have institutional buying, ETF inflows and the tokenization of all assets.We have imminent pro-crypto US regime change.Many crypto natives will end up committing seppuku over &amp; over gain due to PTSD, &amp; lack of belief in",
+                "tweet_user": "Aylo",
+                "tweet_url": "https://twitter.com/alpha_pls/status/1812412596206596394",
+                "description": "Research @alphapleaseHQ | TG channel updates https://t.co/Q3jLUFrk54",
+                "followers_count": 105425,
+                "friends_count": 2492,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1504139683751763971/YDAbI0Ay_normal.jpg",
+                "views": "24613"
+            },
+            {
+                "create_time": "2024-07-15 01:28:17",
+                "tweet_title": "RT @Bluntz_Capital: i know theres still 16 day to go but damn that monthly #btc candle is straight fire. ",
+                "tweet_user": "Awawat",
+                "tweet_url": "https://twitter.com/Awawat_Trades/status/1812660423851929834",
+                "description": "I don’t trade the chop.",
+                "followers_count": 103191,
+                "friends_count": 7553,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1705441078193926144/gLmTqHQN_normal.jpg",
+                "views": null
+            },
+            {
+                "create_time": "2024-07-14 08:01:03",
+                "tweet_title": "#Polkadot ",
+                "tweet_user": "Laolu🧙‍♂️",
+                "tweet_url": "https://twitter.com/Luyaoyuan1/status/1812396878044299417",
+                "description": "No investment advice, only sharing and recording. \nhttps://t.co/DcnJDxflQi",
+                "followers_count": 25939,
+                "friends_count": 5923,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1721940412284452865/_j3w96tK_normal.jpg",
+                "views": "2642"
+            },
+            {
+                "create_time": "2024-07-14 21:51:58",
+                "tweet_title": "$BTC above 60k and alts starting to wake up.If Bitcoin breakout holds, some of these bounces are gonna get silly. ",
+                "tweet_user": "Luke Martin",
+                "tweet_url": "https://twitter.com/VentureCoinist/status/1812605984834977858",
+                "description": "Tweet about coins going up & down, try to buy the ones going up. Bitcoin/Altcoins. @StacksPodcast",
+                "followers_count": 330050,
+                "friends_count": 2323,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1773947792899125248/n1v24TFl_normal.jpg",
+                "views": "8105"
+            },
+            {
+                "create_time": "2024-07-14 05:16:25",
+                "tweet_title": "U300010 $ETH  ",
+                "tweet_user": "ALERT的会所",
+                "tweet_url": "https://twitter.com/BTC_Alert_/status/1812355450077389076",
+                "description": "分享宏观经济、周期性交易，所有涉及收益和和K线的数据均为美工PS的，为了引起节目效果，所有持仓都有夸大部分，除以100倍就是。\n#OKX 钱包让你感受交易的丝滑：\nhttps://t.co/m3cKd4fk7x\n #Binance 做一名纯粹的交易员。",
+                "followers_count": 19298,
+                "friends_count": 424,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1633442170303811584/bm60R1cI_normal.jpg",
+                "views": "6295"
+            },
+            {
+                "create_time": "2024-07-15 01:24:45",
+                "tweet_title": "If you believe that markets are at least somewhat efficient:it is precisely when something unexpected happens, that you need to be paying 110% attention and re-evaluating your thesis.- COVID-19- cointelegraph BTC ETF faux pas- ETH ETF approval- Trump assassination attempt",
+                "tweet_user": "Teng Yan — AI Arc",
+                "tweet_url": "https://twitter.com/0xPrismatic/status/1812659534101684232",
+                "description": "Always thinking about AI  & Crypto | Chief Janitor @cot_research | Former @Delphi_Digital, medicine | Chasing a grand ambition",
+                "followers_count": 16208,
+                "friends_count": 4925,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1696899499677863937/_E51Oewp_normal.jpg",
+                "views": "707"
+            },
+            {
+                "create_time": "2024-07-15 01:18:53",
+                "tweet_title": "I was told Germany running out of BTC was also a sell-the-news event?",
+                "tweet_user": "Awawat",
+                "tweet_url": "https://twitter.com/Awawat_Trades/status/1812658058885321096",
+                "description": "I don’t trade the chop.",
+                "followers_count": 103191,
+                "friends_count": 7553,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1705441078193926144/gLmTqHQN_normal.jpg",
+                "views": "6743"
+            },
+            {
+                "create_time": "2024-07-14 21:29:15",
+                "tweet_title": "RT @NateGeraci: Welcome to spot eth ETF approval week…I’m calling it.Don’t know anything specific, just can’t come up w/ good reason fo…",
+                "tweet_user": "Awawat",
+                "tweet_url": "https://twitter.com/Awawat_Trades/status/1812600268057624730",
+                "description": "I don’t trade the chop.",
+                "followers_count": 103191,
+                "friends_count": 7553,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1705441078193926144/gLmTqHQN_normal.jpg",
+                "views": null
+            },
+            {
+                "create_time": "2024-07-14 22:28:27",
+                "tweet_title": "Anyone use @xdefi_wallet instead of Metamask?Testing it out in case they announce an airdrop this week. Scooping free tokens before the market flips bullish is always a good trade.If there is an airdrop I'm praying it goes better than $FRIEND",
+                "tweet_user": "Luke Martin",
+                "tweet_url": "https://twitter.com/VentureCoinist/status/1812615169446396238",
+                "description": "Tweet about coins going up & down, try to buy the ones going up. Bitcoin/Altcoins. @StacksPodcast",
+                "followers_count": 330050,
+                "friends_count": 2323,
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/1773947792899125248/n1v24TFl_normal.jpg",
+                "views": "6142"
+            }
+        ];
+        new Vue({
+            el: '#app',
+            data: {
+                tweets: [],
+                allTweets: [],
+                loading: false,
+                count: 0,
+                limit: 5
+            },
+
+
+            //created 方法是一个生命周期钩子函数，一个 vue 实例被生成后会调用这个函数
+            created() {
+                //  this.fetchTweets();
+                this.fetchTweetsFromArray(tweetsArray);
+            },
+
+            // computed 函数在组件实例中函数式声明，只要该计算属性依赖的响应式变量发生变化，它就会自动更新
+            computed: {
+                noMore() {
+                    return this.tweets.length >= this.allTweets.length;
+                },
+                disabled() {
+                    return this.loading || this.noMore;
+                }
+            },
+
+            //Vue组件的`methods`选项允许我们定义一系列可复用的函数，这些函数可以直接在模板中触发，或者在组件的其他地方（如事件处理、计算属性等）被调用
+            methods: {
+                async fetchTweetsFromArray() {
+                    this.loading = true;
+                    try {
+                        await this.fetchTweets();
+                        this.loadMore();
+                    } catch (error) {
+                        console.error('Error processing the tweets:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                //通过http请求获取数据库中存储的推文信息
+                fetchTweets() {
+                    this.loading = true;
+                    fetch(`https://blastai-getjson.zeabur.app/gettweets100?endId=${this.endId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.allTweets = this.tweets.concat(data.tweets);
+                            this.endId = data.endId;
+                        })
+                        .catch(error => console.error('Error fetching the tweets:', error))
+                        .finally(() => {
+                            this.loading = false;
+                        });
+                },
+                openUrl(url) {
+                    console.log(url)
+                    window.open(url, '_blank');
+                },
+                loadMore() {
+                    if (this.loading || this.noMore) return;
+                    this.loading = true;
+                    setTimeout(() => {
+                        const nextTweets = this.allTweets.slice(this.count, this.count + this.limit);
+                        this.tweets = this.tweets.concat(nextTweets);
+                        this.count += this.limit;
+                        this.loading = false;
+                    }, 2000);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

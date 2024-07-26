@@ -1,0 +1,280 @@
+<style>
+    /* .gradient-border-active {
+        border-left: 5px solid skyblue;
+      
+    } 
+    */
+
+    button-style {
+        display: inline-block !important;
+        /* 或者 display: flex; 根据需要 */
+        justify-content: left !important;
+        /* 仅当 display 设置为 flex 时需要 */
+        align-items: left !important;
+        /* 仅当 display 设置为 flex 时需要 */
+        /* 其他样式，比如 padding, margin, border 等 */
+        display: flex !important;
+        flex-direction: row !important;
+        /* 恢复为水平排列 */
+        writing-mode: horizontal-tb !important;
+        /* 确保文本水平排列 */
+        transform: none;
+        /* 移除不必要的旋转 */
+
+    }
+
+    button-style:hover {
+        background-color: #2F3CED;
+
+    }
+
+
+    nav-text-block {
+        display: inline-block !important;
+        /* 或者 display: flex; 根据需要 */
+        justify-content: left !important;
+        /* 仅当 display 设置为 flex 时需要 */
+        align-items: center !important;
+        /* 仅当 display 设置为 flex 时需要 */
+        /* 其他样式，比如 padding, margin, border 等 */
+        display: flex !important;
+        flex-direction: row !important;
+        /* 恢复为水平排列 */
+        writing-mode: horizontal-tb !important;
+        /* 确保文本水平排列 */
+        transform: none;
+        /* 移除不必要的旋转 */
+    }
+
+    .nav-link-4.orange-bottom-border.data-btn.active {
+        color: skyblue !important;
+        background-color: #2F3CED !important;
+        /* 选中按钮的文字颜色 */
+    }
+
+    .nav-link-4.orange-bottom-border.data-btn {
+        display: flex !important;
+        /* 使用 flex 布局 */
+        flex-direction: row !important;
+        /* 确保子元素沿水平方向排列 */
+        justify-content: left !important;
+        /* 水平居中对齐子元素 */
+        align-items: center !important;
+        /* 垂直居中对齐子元素 */
+        text-align: left !important;
+        /* 文本居中 */
+    }
+
+    #div-block-420 .nav-link-4 {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: left !important;
+        align-items: center !important;
+        text-align: left !important;
+        padding: 10px 20px !important;
+        /* 根据需要调整内边距 */
+        color: skyblue !important;
+        /* 其他样式保持不变 */
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const timestamp1 = urlParams.get('timestamp1');
+        const timestamp2 = urlParams.get('timestamp2');
+
+        //如果url中存在时间戳 就会执行fetchDataByTimestamps()函数
+        //如果url中不存在时间戳 就会执行fetchlatestdata()函数
+        if (timestamp1 && timestamp2) {
+            fetchDataByTimestamps(timestamp1, timestamp2);
+        } else {
+            console.log('最新数据');
+            fetchlatestdata();
+
+        }
+
+        //获取最新爬取的json文件并将10条数据中的trendingTitle、latestNews、concept和时间戳ts显示在网页中
+        async function fetchlatestdata() {
+            const resp = await fetch('https://17588300.cpolar.io/get_narratives_from_db');
+            if (!resp.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const jsonData = await resp.json();
+
+            var buttons = document.querySelectorAll('.data-btn');
+
+            buttons.forEach(function (button, index) {
+                if (jsonData[0][index]) {
+                    button.textContent = jsonData[0][index].trendingTitle;
+
+                    button.addEventListener('click', function () {
+                        // 更新概念内容
+                        document.getElementById('concept-content').textContent = jsonData[0][index].concept;
+
+                        // 更新最新消息
+                        var latestNews = jsonData[0][index].latest_news;
+                        updateLatestNews(latestNews);
+
+                        // 更新相关令牌按钮
+                        updateRelatedTokens(jsonData[0][index].related_tokens);
+
+                        // 更新按钮激活状态
+                        buttons.forEach(function (btn) {
+                            btn.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    });
+                }
+            });
+
+            // 当所有按钮都已绑定好点击事件后，模拟点击第一个按钮
+            if (buttons.length > 0) {
+                buttons[0].click();
+            };
+            // 显示时间戳
+
+            var timestamp = jsonData[0][10].ts;
+            console.log(jsonData[0][10].ts)
+            displayTimestamp(timestamp);
+
+        };
+
+        //通过时间戳查询数据库json信息  并将查询到的json文件并将10条数据中的trendingTitle、latestNews、concept和时间戳ts显示在网页中
+        async function fetchDataByTimestamps(timestamp1, timestamp2) {
+            try {
+                const response = await fetch(`https://17588300.cpolar.io/get_period_narratives_from_db?timestamp1=${timestamp1}&timestamp2=${timestamp2}`);
+                const jsonData = await response.json();
+
+                const buttons = document.querySelectorAll('.data-btn');
+                buttons.forEach((button, index) => {
+                    if (jsonData[0][index]) {
+                        const data = jsonData[0][index];
+                        button.textContent = data.trendingTitle;
+
+                        button.onclick = function () {
+                            document.getElementById('concept-content').textContent = data.concept;
+                            updateLatestNews(data.latest_news);
+                            updateRelatedTokens(data.related_tokens);
+
+                            buttons.forEach(btn => btn.classList.remove('active', 'gradient-border-active'));
+                            this.classList.add('active', 'gradient-border-active');
+                        };
+                    }
+                });
+
+                if (buttons.length > 0) {
+                    buttons[0].click();
+                }
+                var timestamp = jsonData[0][10].ts;
+                console.log(jsonData[0][10].ts)
+                displayTimestamp(timestamp);
+
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        //将json文件中存储的ts时间显示在id为ts的标签元素中
+        function displayTimestamp(timestampStr) {
+            var tsElement = document.getElementById('ts');
+            tsElement.textContent = timestampStr;
+        }
+
+        //根据json文件内容更新新闻列表
+        function updateLatestNews(latestNews) {
+            var newsTitle1 = document.getElementById('news-title-1');
+            var newsContent1 = document.getElementById('news_content-1');
+            var newsTitle2 = document.getElementById('news-title-2');
+            var newsContent2 = document.getElementById('news_content-2');
+
+            if (latestNews.length > 0) {
+                newsTitle1.textContent = latestNews[0].title;
+                newsTitle1.href = latestNews[0].url;
+                newsContent1.textContent = latestNews[0].news_content;
+            } else {
+                newsTitle1.style.display = 'none';
+                newsContent1.style.display = 'none';
+            }
+
+            if (latestNews.length > 1) {
+                newsTitle2.textContent = latestNews[1].title;
+                newsTitle2.href = latestNews[1].url;
+                newsContent2.textContent = latestNews[1].news_content;
+            } else {
+                newsTitle2.style.display = 'none';
+                newsContent2.style.display = 'none';
+            }
+        }
+
+        //根据json文件内容更新两个relatedToken内容  并显示涨跌
+        function updateRelatedTokens(relatedTokens) {
+            var tokenButton1 = document.getElementById('relatedToken1');
+            var tokenButton2 = document.getElementById('relatedToken2');
+
+            const key1 = Object.keys(relatedTokens[0])[0];
+            const value1 = relatedTokens[0][key1];
+
+            const key2 = Object.keys(relatedTokens[1])[0];
+            const value2 = relatedTokens[1][key2];
+
+            // 清空按钮内容
+            tokenButton1.innerHTML = '';
+            tokenButton2.innerHTML = '';
+
+            if (relatedTokens.length > 0) {
+                tokenButton1.textContent = key1;
+                tokenButton1.style.display = 'inline-block'; // 或者使用 'flex'
+
+                if (value1 === 1) {
+                    var img1 = document.createElement('img');
+                    img1.src = 'https://uploads-ssl.webflow.com/65b8a837c82d22d48e73543b/6670ecb741f2489cb148b6f3_%E4%B8%8A%E5%8D%87%20(1).png'; // 替换为实际图片路径
+                    img1.alt = 'up1';
+                    img1.style.marginLeft = '5px'; // 添加一些左边距使其与文本有间隔
+                    img1.style.height = '0.8em'; // 设置图片高度与文字一致
+                    tokenButton1.appendChild(img1);
+                } else if (value1 === 0) {
+                    var img2 = document.createElement('img');
+                    img2.src = 'https://uploads-ssl.webflow.com/65b8a837c82d22d48e73543b/6670eba1af288140b7678926_%E4%B8%8B%E9%99%8D%20(1).png'; // 替换为实际图片路径
+                    img2.alt = 'down1';
+                    img2.style.marginLeft = '5px'; // 添加一些左边距使其与文本有间隔
+                    img2.style.height = '0.8em'; // 设置图片高度与文字一致
+                    tokenButton1.appendChild(img2);
+                }
+            } else {
+                tokenButton1.style.display = 'none';
+            }
+
+            if (relatedTokens.length > 1) {
+                tokenButton2.textContent = key2;
+                // 检查两个按钮内容是否相同
+                if (key1 === key2) {
+                    tokenButton2.style.display = 'none'; // 隐藏第二个按钮
+                } else {
+                    tokenButton2.style.display = 'inline-block'; // 或者使用 'flex'
+
+                    if (value2 === 1) {
+                        var img3 = document.createElement('img');
+                        img3.src = 'https://uploads-ssl.webflow.com/65b8a837c82d22d48e73543b/6670ecb741f2489cb148b6f3_%E4%B8%8A%E5%8D%87%20(1).png'; // 替换为实际图片路径
+                        img3.alt = 'up2';
+                        img3.style.marginLeft = '5px'; // 添加一些左边距使其与文本有间隔
+                        img3.style.height = '0.8em'; // 设置图片高度与文字一致
+                        tokenButton2.appendChild(img3);
+                    } else if (value2 === 0) {
+                        var img4 = document.createElement('img');
+                        img4.src = 'https://uploads-ssl.webflow.com/65b8a837c82d22d48e73543b/6670eba1af288140b7678926_%E4%B8%8B%E9%99%8D%20(1).png'; // 替换为实际图片路径
+                        img4.alt = 'down2';
+                        img4.style.marginLeft = '5px'; // 添加一些左边距使其与文本有间隔
+                        img4.style.height = '0.8em'; // 设置图片高度与文字一致
+                        tokenButton2.appendChild(img4);
+                    }
+                }
+            } else {
+                tokenButton2.style.display = 'none';
+            }
+
+        }
+
+    });
+</script>

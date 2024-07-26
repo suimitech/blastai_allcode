@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Navigation</title>
+    <style>
+        /* 定义页面样式 */
+        wrapper {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f0226;
+            display: flex;
+            max-width: 830px;
+            flex-direction: column;
+            align-items: left;
+            margin: 0;
+            padding: 20px;
+            color: #fff;
+        }
+
+        /* 定义新闻容器的样式 */
+        .flex-container {
+            display: flex;
+            max-width: 830px;
+            background-color: #16162F;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .left-container {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+
+        .right-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #16162F;
+            color: white;
+            padding: 3px;
+            gap: 3px;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+            color: white;
+        }
+
+        .flex-item {
+            text-align: center;
+            padding: 8px;
+            background-color: #402f6328;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: white;
+        }
+
+        .flex-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .token {
+            width: 100%;
+            text-align: center;
+            padding: 1px 2px;
+            background-color: #402f6328;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-size: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .token:hover {
+            background-color: rgb(124, 101, 170)28;
+        }
+
+        .alt-bg {
+            background-color: #473a5f;
+        }
+
+        .timestamp {
+            margin-top: 10px;
+            color: #b5b5b5;
+            font-size: 12px;
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+        }
+
+        .date-container {
+            display: flex;
+            width: 830px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .date-label {
+            color: white;
+            font-size: 14px;
+            width: 140px;
+        }
+
+        .date-range {
+            width: 200px;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            background-color: #4F525E;
+            color: #fff;
+        }
+
+        .get-data-button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            margin-right: 10px;
+            font-size: 16px;
+            background-color: #4F525E;
+            color: white;
+            cursor: pointer;
+        }
+
+        .get-data-button:hover {
+            background-color: #4f525e6c;
+        }
+
+        #news-containers {
+            height: 670px;
+            width: 830px;
+            overflow-y: auto;
+            background-color: #262836;
+            border-radius: 20px;
+            padding: 10px;
+            padding-bottom: 10px;
+
+        }
+
+
+
+        /* 设置滚动条宽度 */
+        .slider-content {
+            overflow-y: scroll;
+            /* 通过 overflow-y 设置垂直滚动条 */
+            scrollbar-width: auto;
+            /* 定义滚动条宽度，可以使用 thin, auto, 或者 none */
+        }
+
+        /* 定义滚动条样式 */
+        .slider-content::-webkit-scrollbar {
+            width: 5px;
+            /* 滚动条宽度 */
+        }
+
+        .slider-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            /* 滚动条轨道背景色 */
+        }
+
+        .slider-content::-webkit-scrollbar-thumb {
+            background: #888;
+            /* 滚动条滑块背景色 */
+            border-radius: 10px;
+            /* 滑块圆角 */
+            border: 3px solid #555;
+            /* 滑块边框 */
+        }
+
+        .slider-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+            /* 滑块鼠标悬停时背景色 */
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
+</head>
+
+<wrapper>
+    <!-- 日期输入框和按钮容器 -->
+    <div class="date-container">
+        <label for="date-range" class="date-label">Select Date Range:</label>
+        <input type="text" id="date-range" class="date-range" placeholder="Select date range">
+        <button class="get-data-button" onclick="getData()">Get Data</button>
+    </div>
+
+    <!-- 新闻内容容器 -->
+    <div id="news-containers" class="slider-content">
+        <!-- 动态插入的内容 -->
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/l10n/zh.js"></script>
+    <script>
+        let startDate, endDate;
+        //设定日期选择器选择框
+        flatpickr("#date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            locale: "en",
+            onClose: function (selectedDates) {
+                if (selectedDates.length === 2) {
+                    startDate = selectedDates[0];
+                    endDate = selectedDates[1];
+                }
+            }
+        });
+
+        // 获取数据函数
+        function getData() {
+            // 检查是否选择了日期
+            if (!startDate || !endDate) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            // 检查开始日期是否晚于结束日期
+            if (startDate > endDate) {
+                alert("Start date cannot be later than end date.");
+                return;
+            }
+
+            // 检查时间间隔是否大于7天
+            const timeDifference = endDate.getTime() - startDate.getTime();
+            const daysDifference = timeDifference / (1000 * 60 * 60 * 24);
+            if (daysDifference > 7) {
+                alert("Date range cannot be greater than 7 days.");
+                return;
+            }
+
+            // 设置开始时间为当天零点
+            startDate.setHours(0, 0, 0, 0);
+            // 设置结束时间为次日零点
+            endDate.setHours(24, 0, 0, 0);
+            // 转换为时间戳（秒）
+            const timestamp1 = startDate.getTime() / 1000;
+            const timestamp2 = endDate.getTime() / 1000;
+            // 调用获取数据函数
+            fetchPeriodNarratives(timestamp1, timestamp2);
+        }
+
+        // 异步获取数据函数
+        async function fetchPeriodNarratives(timestamp1, timestamp2) {
+            try {
+                // 发起请求获取数据
+                const response = await fetch(`https://17588300.cpolar.io/get_period_narratives_from_db?timestamp1=${timestamp1}&timestamp2=${timestamp2}`);
+                console.log(`https://17588300.cpolar.io/get_period_narratives_from_db?timestamp1=${timestamp1}&timestamp2=${timestamp2}`);
+                const data = await response.json();
+                console.log('Fetched period data:', data);
+                // 处理获取的数据
+                processPeriodData(data);
+            } catch (error) {
+                console.error('Error fetching period narratives:', error);
+            }
+        }
+
+        // 处理数据函数
+        function processPeriodData(data) {
+            // 获取新闻内容容器
+            const containers = document.getElementById('news-containers');
+            // 清空现有内容
+            containers.innerHTML = '';
+
+            // 遍历数据并插入内容
+            data.forEach(page => {
+                // 确保列表不为空
+                if (page.length === 0) return;
+
+                // 只获取前五个字典中的trendingTitle
+                const trendingTitles = page.slice(0, 5).map(item => item.trendingTitle);
+
+                // 获取第六个字典中的ts值
+                const timestamp = page[5]?.ts;
+
+                // 获取第六个字典中的tokens键对应的值
+                const tokens = page[6]?.tokens;
+
+                // 创建新闻容器
+                const flexContainer = document.createElement('div');
+                flexContainer.className = 'flex-container';
+
+                // 创建左侧容器并添加标题和时间戳
+                const leftContainer = document.createElement('div');
+                leftContainer.className = 'left-container';
+
+                // 创建前五个标题的元素
+                trendingTitles.forEach(trendingTitle => {
+                    const item = document.createElement('div');
+                    item.className = 'flex-item';
+                    item.innerText = trendingTitle;
+                    leftContainer.appendChild(item);
+                });
+
+                // 如果时间戳存在，添加时间戳
+                if (timestamp.length > 0) {
+                    const timestampElement = document.createElement('div');
+                    timestampElement.className = 'timestamp';
+                    timestampElement.innerText = timestamp;
+                    leftContainer.appendChild(timestampElement);
+
+                    // 为左侧容器添加点击事件
+                    leftContainer.addEventListener('click', function () {
+                        // 将日期字符串转换为Date对象
+                        const date = new Date(timestamp);
+                        // 将Date对象转换为时间戳（毫秒）
+                        const timestampMilliseconds = date.getTime();
+                        // 将时间戳转换为秒
+                        const timestampSeconds = Math.floor(timestampMilliseconds / 1000);
+                        // 计算timestamp1和timestamp2
+                        const timestamp1 = timestampSeconds - 300;
+                        const timestamp2 = timestampSeconds + 300;
+                        window.location.href = `https://www.blastai.xyz/alphahunter?timestamp1=${timestamp1}&timestamp2=${timestamp2}`;
+                    });
+                }
+
+                // 创建右侧容器并添加tokens
+                const rightContainer = document.createElement('div');
+                rightContainer.className = 'right-container';
+
+                // 遍历tokens并创建元素
+                if (tokens && Array.isArray(tokens)) {
+                    tokens.forEach(token => {
+                        const tokenElement = document.createElement('div');
+                        tokenElement.className = 'token';
+                        tokenElement.textContent = token;
+                        rightContainer.appendChild(tokenElement);
+                    });
+                }
+
+                // 为右侧容器添加点击事件
+                rightContainer.addEventListener('click', function () {
+                    // 将日期字符串转换为Date对象
+                    const date = new Date(timestamp);
+                    // 将Date对象转换为时间戳（毫秒）
+                    const timestampMilliseconds = date.getTime();
+                    // 将时间戳转换为秒
+                    const timestampSeconds = Math.floor(timestampMilliseconds / 1000);
+                    // 计算timestamp1和timestamp2
+                    const timestamp1 = timestampSeconds - 300;
+                    const timestamp2 = timestampSeconds + 300;
+                    window.location.href = `https://www.blastai.xyz/alphahunter-top-10-tokens?timestamp1=${timestamp1}&timestamp2=${timestamp2}`;
+                });
+
+                // 将左侧和右侧容器添加到新闻容器中
+                flexContainer.appendChild(leftContainer);
+                flexContainer.appendChild(rightContainer);
+                // 将新闻容器添加到页面中
+                containers.appendChild(flexContainer);
+
+                // 创建左侧标题元素并添加到左侧容器顶部
+                const leftTitle = document.createElement('div');
+                leftTitle.className = 'title';
+                leftTitle.innerText = 'Top 5 Trending Titles';
+                leftContainer.insertBefore(leftTitle, leftContainer.firstChild);
+
+                // 创建右侧标题元素并添加到右侧容器顶部
+                const rightTitle = document.createElement('div');
+                rightTitle.className = 'title';
+                rightTitle.innerText = 'Top 10 Tokens';
+                rightContainer.insertBefore(rightTitle, rightContainer.firstChild);
+            });
+        }
+
+
+        // 页面加载时获取过去3天的数据
+        window.onload = function () {
+            fetchPeriodNarratives(Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60, Math.floor(Date.now() / 1000));
+            // 计算三天前的日期
+            const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+            // 将日期格式转换为 "YYYY-MM-DD"，因为日期输入框需要这种格式
+            const formattedDate = threeDaysAgo.toISOString().split('T')[0];
+            // 设置日期范围输入框的值
+            document.getElementById('date-range').value = `${formattedDate} to ${new Date().toISOString().split('T')[0]}`;
+        };
+
+
+        // document.addEventListener('DOMContentLoaded', function () {
+        //     // 计算时间戳，从特定日期开始到特定日期前一秒的时间范围
+        //     const startDate = new Date('2024-06-23T00:00:00Z').getTime() / 1000;
+        //     const endDate = new Date('2024-06-27T00:00:00Z').getTime() / 1000 - 1;
+
+        //     // 调用函数获取并处理时间范围内的数据
+        //     fetchPeriodNarratives(startDate, endDate);
+
+        //     // 设置日期范围输入框的初始值为 "YYYY-MM-DD to YYYY-MM-DD"
+        //     document.getElementById('date-range').value = '2024-06-23 to 2024-06-26';
+        // });
+
+
+        // 处理浏览器后退事件
+        window.onpopstate = function () {
+            document.getElementById('news-containers').innerHTML = '';
+            fetchPeriodNarratives(Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60, Math.floor(Date.now() / 1000));
+        };
+    </script>
+</wrapper>
+
+</html>
