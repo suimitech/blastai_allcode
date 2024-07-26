@@ -64,6 +64,13 @@
             background-color: #CC3E44;
             /* 红色 */
         }
+
+        .price-update {
+            background-color: #8DC149;
+            /* 初始背景色 */
+            transition: background-color 0.5s ease;
+            /* 渐变持续时间 */
+        }
     </style>
 </head>
 
@@ -75,24 +82,24 @@
         const cryptoData = [
             { name: 'BTC', price: '$60229.99', change: '-2.80%', changeColor: 'color-CC3E44' },
             { name: 'ETH', price: '$3292.22', change: '-3.61%', changeColor: 'color-CC3E44' },
-            { name: 'BNB', price: '$553.8', change: '-4.29%', changeColor: 'color-CC3E44' },
+            { name: 'USDT', price: '$553.8', change: '-4.29%', changeColor: 'color-CC3E44' },
             { name: 'SOL', price: '$140.13', change: '-8.39%', changeColor: 'color-CC3E44' },
-            { name: 'XRP', price: '$0.467', change: '-3.85%', changeColor: 'color-CC3E44' },
-            { name: 'TON', price: '$7.831', change: '-3.29%', changeColor: 'color-CC3E44' },
+            { name: 'BNB', price: '$0.467', change: '-3.85%', changeColor: 'color-CC3E44' },
+            { name: 'XRP', price: '$7.831', change: '-3.29%', changeColor: 'color-CC3E44' },
             { name: 'DOGE', price: '$0.11793', change: '-5.33%', changeColor: 'color-CC3E44' },
             { name: 'ADA', price: '$0.409', change: '-3.03%', changeColor: 'color-CC3E44' },
             { name: 'AVAX', price: '$26.35', change: '-8.25%', changeColor: 'color-CC3E44' },
             { name: 'TRX', price: '$0.12889', change: '-0.47%', changeColor: 'color-CC3E44' },
-            { name: 'SHIB', price: '$0.00001626', change: '-5.96%', changeColor: 'color-CC3E44' },
-            { name: 'DOT', price: '$6.043', change: '-6.67%', changeColor: 'color-CC3E44' },
-            { name: 'LINK', price: '$13.522', change: '-5.99%', changeColor: 'color-CC3E44' },
+            { name: 'LINK', price: '$0.00001626', change: '-5.96%', changeColor: 'color-CC3E44' },
+            { name: 'SHIB', price: '$6.043', change: '-6.67%', changeColor: 'color-CC3E44' },
+            { name: 'ONDO', price: '$13.522', change: '-5.99%', changeColor: 'color-CC3E44' },
             { name: 'BCH', price: '$370.4', change: '-2.35%', changeColor: 'color-CC3E44' },
             { name: 'UNI', price: '$8.42', change: '-6.82%', changeColor: 'color-CC3E44' },
-            { name: 'NEAR', price: '$4.963', change: '-9.27%', changeColor: 'color-CC3E44' },
-            { name: 'LTC', price: '$71.65', change: '-5.81%', changeColor: 'color-CC3E44' },
-            { name: 'LEO', price: '$5.797', change: '+0.75%', changeColor: 'color-8DC149' },
-            { name: 'MATIC', price: '$0.528', change: '-7.21%', changeColor: 'color-CC3E44' },
-            { name: 'PEPE', price: '$0.00000987', change: '-11.24%', changeColor: 'color-CC3E44' }
+            { name: 'ENA', price: '$4.963', change: '-9.27%', changeColor: 'color-CC3E44' },
+            { name: 'ARB', price: '$71.65', change: '-5.81%', changeColor: 'color-CC3E44' },
+            { name: 'NEAR', price: '$5.797', change: '+0.75%', changeColor: 'color-8DC149' },
+            { name: 'ENA', price: '$0.528', change: '-7.21%', changeColor: 'color-CC3E44' },
+            { name: 'TIA', price: '$0.00000987', change: '-11.24%', changeColor: 'color-CC3E44' }
         ];
 
         class Swiper {
@@ -101,6 +108,8 @@
                 this.wrapper = this.swiper.querySelector('.swiper-wrapper');
                 this.currentIndex = 0;
                 this.currentPosition = 0;
+                this.previousPrice = {}; // 初始化 previousPrice 对象;
+                this.subscriptions = new Map(); // 记录订阅信息的Map
                 this.init(); // 初始化设置
                 this.startContinuousSlide(); // 开始持续轮播
                 this.initializeWebSocket();
@@ -154,8 +163,14 @@
                 // 删除第一个已经滑出视野的滑动对象
                 const firstSlide = this.wrapper.querySelector('.swiper-slide');
                 if (firstSlide && parseInt(firstSlide.style.transform.replace('translateX(', '')) <= -firstSlide.offsetWidth) {
-                    firstSlide.remove();
+                    const coinName = firstSlide.querySelector('.text-color').textContent.trim();
+                    this.removeSlide(firstSlide, coinName); // 移除DOM元素和取消订阅
                 }
+            }
+
+            removeSlide(slideElement, coinName) {
+                slideElement.remove();
+                this.unsubscribeFromWebSocket(coinName);
             }
 
             initializeWebSocket() {
@@ -164,11 +179,7 @@
 
                 this.socket.onopen = () => {
                     console.log('WebSocket connected.');
-                    const subscriptionMessage = {
-                        action: 'SubAdd',
-                        subs: cryptoData.map(coin => `5~CCCAGG~${coin.name}~USD`)
-                    };
-                    this.socket.send(JSON.stringify(subscriptionMessage));
+                    this.subscribeInitialCryptoData();
                 };
 
                 this.socket.onmessage = (event) => {
@@ -187,14 +198,27 @@
                 };
             }
 
-            updatePrice(message) {
-                // 更新加密货币价格
-                const coinName = message.FROMSYMBOL;
-                const newPrice = parseFloat(message.PRICE);
+            subscribeInitialCryptoData() {
+                const subscriptionMessage = {
+                    action: 'SubAdd',
+                    subs: cryptoData.map(coin => `5~CCCAGG~${coin.name}~USD`)
+                };
+                this.socket.send(JSON.stringify(subscriptionMessage));
 
-                const priceElement = document.getElementById(`${coinName}-price`);
-                if (priceElement) {
-                    priceElement.textContent = this.formatVolume24(newPrice);
+                // 记录订阅信息
+                cryptoData.forEach(coin => {
+                    this.subscriptions.set(coin.name, `5~CCCAGG~${coin.name}~USD`);
+                });
+            }
+
+            unsubscribeFromWebSocket(coinName) {
+                if (this.subscriptions.has(coinName)) {
+                    const unsubscribeMessage = {
+                        action: 'SubRemove',
+                        subs: this.subscriptions.get(coinName)
+                    };
+                    this.socket.send(JSON.stringify(unsubscribeMessage));
+                    this.subscriptions.delete(coinName);
                 }
             }
             formatVolume24(value) {
@@ -221,9 +245,39 @@
                 // 在返回值之前添加'$'符号
                 return '$' + formatted;
             }
+
+            updatePrice(message) {
+
+                const coinName = message.FROMSYMBOL;
+                const newPrice = this.formatVolume24(parseFloat(message.PRICE));
+
+                const priceElement = document.getElementById(`${coinName}-price`);
+
+                // 获取之前的价格
+                const previousPrice = this.previousPrice[coinName] || null;
+
+                if (priceElement) {
+                    // 更新价格显示
+                    priceElement.textContent = `${newPrice}`;
+
+                    // 比较前后价格，若不相等则添加类名和设置定时器
+                    if (previousPrice !== newPrice) {
+                        priceElement.classList.add('price-update');
+
+                        // 设置定时器，在一定时间后移除类名，使背景颜色消失
+                        setTimeout(() => {
+                            priceElement.classList.remove('price-update');
+                        }, 500); // 0.5s 后移除类名
+                    }
+
+                    // 更新之前的价格为当前价格，以便下次比较
+                    this.previousPrice[coinName] = newPrice;
+                }
+            }
+
         }
 
-        const mySwiper = new Swiper('.swiper');
+        new Swiper('.swiper');
     </script>
 </body>
 

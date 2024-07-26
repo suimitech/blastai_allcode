@@ -65,7 +65,7 @@ blastai的kol-flow页面的嵌入代码
 (8)footer-slider.html
 市值排名前20个token向左无限滚动条
 位置：blastai项目中alphahunter、top-10-tokens、merkets、kol-flow页中，页面最下方
-作用：实时显示20个token的价格变动
+作用：实时显示20个token的价格变动,如果有变动就会给price添加一个背景颜色变化
 
 (9)blast-ai-react文件夹
 链接小狐狸钱包的react项目代码
